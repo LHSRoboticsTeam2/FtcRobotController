@@ -9,21 +9,17 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
-import java.util.List;
 
-
-@Autonomous(name="Autonomous_7615", group="chad")
-public class AutoNomous_7615 extends LinearOpMode {
+@Autonomous(name="AutoRedClose7615", group="chad")
+public class AutoRedClose7615 extends LinearOpMode {
 
     //
 
@@ -146,8 +142,8 @@ public class AutoNomous_7615 extends LinearOpMode {
 
 
 
-                        encoderDrive(.5, 20,  -20, 10);
-                        encoderDrive(.5, -40,  -40, 10);
+                        encoderDrive(.5, -23,  23, 5);
+                        encoderDrive(.5, -10,  -10, 5);
                         sleep(300000);
 
 

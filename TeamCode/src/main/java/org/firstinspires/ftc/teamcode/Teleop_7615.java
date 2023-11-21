@@ -20,7 +20,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -76,11 +75,11 @@ public class Teleop_7615 extends OpMode {
 
         if (gamepad2.x) {
             robot.LArm.setPower(1);
-            robot.RArm.setPower(-1);
+            robot.RArm.setPower(1);
         }
         else if (gamepad2.b) {
             robot.LArm.setPower(-1);
-            robot.RArm.setPower(1);
+            robot.RArm.setPower(-1);
         }
 
         else {
@@ -89,24 +88,22 @@ public class Teleop_7615 extends OpMode {
         }
 
         if (gamepad2.left_bumper) {
-            robot.RightGrab.setPosition(.7);
-            robot.LeftGrab.setPosition(.5);
+            robot.LeftGrab.setPosition(.1);
 
         }
+
         if (gamepad2.right_bumper) {
-            robot.RightGrab.setPosition(.9);
-            robot.LeftGrab.setPosition(.3);
+            robot.LeftGrab.setPosition(1);
 
         }
+
         if (gamepad2.y) {
-            robot.LeftPush.setPosition(.9);
             robot.RightPush.setPosition(.9);
 
         }
 
         if (gamepad2.a) {
-            robot.LeftPush.setPosition(0);
-            robot.RightPush.setPosition(.9);
+            robot.RightPush.setPosition(.1);
 
         }
 

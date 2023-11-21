@@ -15,7 +15,10 @@ Hardware_7615 {
     public DcMotor RRear        = null;
     public DcMotor RFront       = null;
     public DcMotor LRear        = null;
-
+    //public DcMotor Ellie        = null;
+    //public DcMotor Hazel       = null;
+    //public DcMotor Molly       = null;
+    //public DcMotor Finn       = null;
     public BNO055IMU imu        = null;
     public Servo RightGrab    = null;
     public Servo LeftGrab    = null;
@@ -24,6 +27,7 @@ Hardware_7615 {
 
 
 
+    //  public CRServo Lift    = null;
 
 
     public DcMotor RArm  = null;
@@ -48,7 +52,10 @@ Hardware_7615 {
         RFront      = hwMap.get(DcMotor.class, "RFront");
         LRear       = hwMap.get(DcMotor.class, "LRear");
         RRear       = hwMap.get(DcMotor.class, "RRear");
-
+        //Ellie       = hwMap.get(DcMotor.class, "Ellie");
+        //Hazel       = hwMap.get(DcMotor.class, "Hazel");
+        //Molly       = hwMap.get(DcMotor.class, "Molly");
+        //Finn       = hwMap.get(DcMotor.class, "Finn");
         LArm   =hwMap.get(DcMotor.class, "LArm");
         RArm    =hwMap.get(DcMotor.class, "RArm");
         // Define and initialize ALL installed servos.
@@ -60,7 +67,10 @@ Hardware_7615 {
 
 
 
-
+        //Ruby      =hwMap.get(Servo.class, "Ruby");
+        //Fluffy      =hwMap.get(Servo.class, "Fluffy");
+        //Lulu      =hwMap.get(Servo.class, "Lulu");
+        //Kenny      =hwMap.get(Servo.class, "Kenny");
         //Define and initialize ALL installed sensors
         BNO055IMU.Parameters parameters             = new BNO055IMU.Parameters();
         parameters.angleUnit                        = BNO055IMU.AngleUnit.DEGREES;
@@ -73,7 +83,7 @@ Hardware_7615 {
         imu.initialize(parameters);
 
         LFront.setDirection(DcMotor.Direction.REVERSE);
-        LRear.setDirection(DcMotor.Direction.REVERSE);
+        LRear.setDirection(DcMotor.Direction.FORWARD);
         RFront.setDirection(DcMotor.Direction.REVERSE);
         RRear.setDirection(DcMotor.Direction.REVERSE);
 
@@ -89,6 +99,8 @@ Hardware_7615 {
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //Hazel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //Molly.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
