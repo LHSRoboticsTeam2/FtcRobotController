@@ -19,7 +19,7 @@ public class Teleop  extends LinearOpMode {
         while (opModeIsActive()) {
             robot.manuallyDriveRobot(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-            telemetry.addData("PropDistanceCM", String.format("%.01f cm", robot.getPropDistanceInCM()));
+            telemetry.addData("PropDistanceCM", String.format("%.01f cm", robot.getRightPropDistanceInCM()));
             telemetry.update();
 
 
