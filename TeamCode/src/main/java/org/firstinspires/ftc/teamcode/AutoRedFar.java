@@ -26,8 +26,8 @@ public class AutoRedFar extends LinearOpMode {
             int driveRightInches = 20;
             robot.autoDriveRobot(driveLeftInches, driveRightInches);
             //set the variables to a positive and negative value to turn the robot
-            driveLeftInches =-20;
-            driveRightInches = 20;
+            driveLeftInches =-35;
+            driveRightInches = 35;
             robot.autoDriveRobot(driveLeftInches, driveRightInches);
             // Set these variables both to positive to drive strait again
             driveLeftInches = 20;

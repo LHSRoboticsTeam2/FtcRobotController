@@ -304,6 +304,8 @@ public class RobotHardware {
         int blue = colorSensor.blue();
         int green = colorSensor.green();
         int alpha = colorSensor.alpha();
+        myOpMode.telemetry.addData("RGB", red + ", " + green + ", " + blue);
+        myOpMode.telemetry.update();
         return new RGBAColors(red, blue,green, alpha);
     }
 
@@ -341,6 +343,36 @@ public class RobotHardware {
             }
         }
         setPowerAllWheels(0);
+    }
+
+    public void turnToSpike(int propPositionNumber) {
+        int pixelTurnDistance = 12;
+        int ninetyDegreeDistance = 15;
+        double turnSpeed = .2;
+        if (propPositionNumber == 2) {
+            autoDriveRobot(20,20);
+            autoDriveRobot(ninetyDegreeDistance, ninetyDegreeDistance * -1, turnSpeed);
+            autoDriveRobot(100, 100);
+        } else if (propPositionNumber == 1) {
+            autoDriveRobot(pixelTurnDistance,pixelTurnDistance * -1, turnSpeed);
+            autoDriveRobot(3, 3);
+            autoDriveRobot(-12, 12);
+            autoDriveRobot(18,18);
+            autoDriveRobot(16
+                    , -16);
+            autoDriveRobot(100,100);
+        }
+        //3
+
+        else {
+            autoDriveRobot(pixelTurnDistance * -1, pixelTurnDistance, turnSpeed);
+            autoDriveRobot(5,5);
+            autoDriveRobot(1,-1);
+            autoDriveRobot(40,40);
+            autoDriveRobot(-100, -100);
+        }
+        myOpMode.telemetry.addData("Op Mode",propPositionNumber);
+        myOpMode.telemetry.update();
     }
 }
 
