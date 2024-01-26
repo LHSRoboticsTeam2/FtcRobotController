@@ -36,6 +36,7 @@ public class RobotHardware {
     private DcMotor armMotor;
     private Servo   leftHand;
     private Servo   rightHand;
+    private Servo   DroneLaunch;
 
     private DistanceSensor rightDistanceSensor;
     private DistanceSensor leftDistanceSensor;
@@ -48,7 +49,7 @@ public class RobotHardware {
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    public static final double DEFAULT_WHEEL_MOTOR_SPEED = .4;
+    public static final double DEFAULT_WHEEL_MOTOR_SPEED = .3;
     public static final double MID_SERVO       =  0.5 ;
     public static final double HAND_SPEED      =  0.02 ;  // sets rate to move servo
     public static final double ARM_UP_POWER    =  0.45 ;
@@ -67,7 +68,7 @@ public class RobotHardware {
      */
     public void init() {
         initWheelMotors();
-        //initServos();
+        initServos();
         initSensors();
         initAnalogInput();
         initArmMotors();
@@ -76,12 +77,6 @@ public class RobotHardware {
         myOpMode.telemetry.update();
     }
 
-    /**
-     * Call shutDown() to stop and close all the robot's hardware.
-     */
-    public void shutDown() {
-
-    }
     /**
      * Initialize all the wheel motors.
      * This method must be called ONCE when the OpMode is initialized.
@@ -102,17 +97,15 @@ public class RobotHardware {
         rightFrontWheel.setDirection(DcMotor.Direction.REVERSE);
         rightRearWheel.setDirection(DcMotor.Direction.REVERSE);
 
-        // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
-        leftFrontWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
         // Set wheel motors to not resist turning when motor is stopped.
         leftFrontWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightFrontWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         leftRearWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightRearWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        // Use STOP_AND_RESET_ENCODER to keep wheels from moving in unexpected ways
+        // during subsequent runs of an OpMode.
+        setRunModeForAllWheels(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     /**
@@ -120,11 +113,7 @@ public class RobotHardware {
      */
     private void initServos() {
         // Define and initialize ALL installed servos.
-        leftHand = myOpMode.hardwareMap.get(Servo.class, "left_hand");
-        rightHand = myOpMode.hardwareMap.get(Servo.class, "right_hand");
-
-        leftHand.setPosition(MID_SERVO);
-        rightHand.setPosition(MID_SERVO);
+        DroneLaunch = myOpMode.hardwareMap.get(Servo.class, "DroneLaunch");
     }
 
     /**
@@ -252,7 +241,9 @@ public class RobotHardware {
         final double rightRearVelocity = vectorLength * Math.sin(robotAngle) + rightXscale;
         final double leftRearVelocity = vectorLength * Math.cos(robotAngle) - rightXscale;
         // Use existing method to drive both wheels.
+        setRunModeForAllWheels(DcMotor.RunMode.RUN_USING_ENCODER);
         setDrivePower(leftFrontVelocity, rightFrontVelocity, leftRearVelocity, rightRearVelocity);
+
     }
 
     /**
@@ -290,7 +281,10 @@ public class RobotHardware {
      * Move XYZ servo so that drone is released.
      */
     public void releaseDrone() {
-        //Move whichever servo(?).
+        DroneLaunch.setPosition(0.5);
+    }
+    public void resetDrone() {
+        DroneLaunch.setPosition(0.9);
     }
 
     public double getPotentiometerVoltage(){
@@ -329,7 +323,7 @@ public class RobotHardware {
     }
 
     public void driveToSpike(SpikeColor color, int colorThreshold) {
-        autoDriveRobot(-20,-20);
+        autoDriveRobot(-25,-25);
         setRunModeForAllWheels(DcMotor.RunMode.RUN_USING_ENCODER);
         setPowerAllWheels(-.05);
         RGBAColors colors;
@@ -345,34 +339,31 @@ public class RobotHardware {
         setPowerAllWheels(0);
     }
 
-    public void turnToSpike(int propPositionNumber) {
-        int pixelTurnDistance = 12;
-        int ninetyDegreeDistance = 15;
-        double turnSpeed = .2;
-        if (propPositionNumber == 2) {
-            autoDriveRobot(20,20);
-            autoDriveRobot(ninetyDegreeDistance, ninetyDegreeDistance * -1, turnSpeed);
-            autoDriveRobot(100, 100);
-        } else if (propPositionNumber == 1) {
-            autoDriveRobot(pixelTurnDistance,pixelTurnDistance * -1, turnSpeed);
-            autoDriveRobot(3, 3);
-            autoDriveRobot(-12, 12);
-            autoDriveRobot(18,18);
-            autoDriveRobot(16
-                    , -16);
-            autoDriveRobot(100,100);
-        }
-        //3
-
-        else {
-            autoDriveRobot(pixelTurnDistance * -1, pixelTurnDistance, turnSpeed);
-            autoDriveRobot(5,5);
-            autoDriveRobot(1,-1);
-            autoDriveRobot(40,40);
-            autoDriveRobot(-100, -100);
-        }
+    public void turnToSpike(int propPositionNumber, SpikeColor color) {
         myOpMode.telemetry.addData("Op Mode",propPositionNumber);
         myOpMode.telemetry.update();
+
+        int pixelTurnDistance;
+        double turnSpeed = .15;
+
+        if ((color == SpikeColor.RED && propPositionNumber == 1) || (color == SpikeColor.BLUE && propPositionNumber == 3)) {
+            pixelTurnDistance = 16;
+        }
+        else  {
+            pixelTurnDistance = 14;
+        }
+
+        if (propPositionNumber == 2) {
+            autoDriveRobot(20,20); //Back away from spike
+        } else if (propPositionNumber == 1) {
+            autoDriveRobot(pixelTurnDistance,pixelTurnDistance * -1, turnSpeed); //place pixel on spike 1
+            autoDriveRobot(3, 3); //back away from spike
+        }
+        //3
+        else {
+            autoDriveRobot(pixelTurnDistance * -1, pixelTurnDistance, turnSpeed); //place pixel on spike 3
+            autoDriveRobot(5,5); // back away from spike
+        }
     }
 }
 

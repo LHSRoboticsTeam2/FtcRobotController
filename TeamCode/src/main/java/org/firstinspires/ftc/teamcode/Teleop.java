@@ -10,6 +10,7 @@ public class Teleop  extends LinearOpMode {
     public void runOpMode() {
         RobotHardware robot = new RobotHardware(this);
         robot.init();
+        robot.resetDrone();
 
         // Wait for the DS start button to be touched.
         telemetry.addData(">", "Touch Play to start OpMode");
@@ -22,9 +23,11 @@ public class Teleop  extends LinearOpMode {
             telemetry.addData("PropDistanceCM", String.format("%.01f cm", robot.getRightPropDistanceInCM()));
             telemetry.update();
 
-
             if (gamepad1.a) {
                 robot.releaseDrone();
+            }
+            else if (gamepad1.b) {
+                robot.resetDrone();
             }
         }
     }
