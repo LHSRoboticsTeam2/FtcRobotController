@@ -27,8 +27,35 @@ public class AutoRedFar extends LinearOpMode {
             telemetry.setAutoClear(false);
             propPositionNumber = robot.getSpikeObjectPosition();
 
-            robot.turnToSpike(propPositionNumber, SpikeColor.RED);
+            this.turnToSpike(propPositionNumber, SpikeColor.RED);
             driveToBackDrop(propPositionNumber);
+            //  rotate arm negative 175 and then outake pixel
+        }
+    }
+    private void turnToSpike(int propPositionNumber, SpikeColor color) {
+        telemetry.addData("Op Mode",propPositionNumber);
+        telemetry.update();
+
+        int pixelTurnDistance;
+        double turnSpeed = .15;
+
+        if ((color == SpikeColor.RED && propPositionNumber == 1) || (color == SpikeColor.BLUE && propPositionNumber == 3)) {
+            pixelTurnDistance = 16;
+        }
+        else  {
+            pixelTurnDistance = 14;
+        }
+
+        if (propPositionNumber == 2) {
+            robot.autoDriveRobot(20,20); //Back away from spike
+        } else if (propPositionNumber == 1) {
+            robot.autoDriveRobot(pixelTurnDistance,pixelTurnDistance * -1, turnSpeed); //place pixel on spike 1
+            robot.autoDriveRobot(3, 3); //back away from spike
+        }
+        //3
+        else {
+            robot.autoDriveRobot(pixelTurnDistance * -1, pixelTurnDistance, turnSpeed); //place pixel on spike 3
+            robot.autoDriveRobot(5,5); // back away from spike
         }
     }
     private void driveToBackDrop(int propPositionNumber) {

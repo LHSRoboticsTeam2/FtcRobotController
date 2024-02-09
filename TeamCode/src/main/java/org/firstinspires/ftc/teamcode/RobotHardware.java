@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
@@ -33,15 +35,13 @@ public class RobotHardware {
     private DcMotor leftArm;
 
     // Define other HardwareDevices as needed.
-    private DcMotor armMotor;
-    private Servo   leftHand;
-    private Servo   rightHand;
-    private Servo   DroneLaunch;
+    private CRServo intakeServo;
+    private Servo droneLaunch;
 
     private DistanceSensor rightDistanceSensor;
     private DistanceSensor leftDistanceSensor;
     private ColorSensor colorSensor;
-    private AnalogInput potentiometer;
+    private AnalogInput armPotentiometer;
 
     // Define Drive constants.  Make them public so they CAN be used by the calling OpMode
     static final double COUNTS_PER_MOTOR_REV = 560;
@@ -54,7 +54,9 @@ public class RobotHardware {
     public static final double HAND_SPEED      =  0.02 ;  // sets rate to move servo
     public static final double ARM_UP_POWER    =  0.45 ;
     public static final double ARM_DOWN_POWER  = -0.45 ;
-
+    public static final double MAX_POTENTIOMETER_ANGLE = 270;
+    static final double ARM_MOTOR_COUNTS_PER_REV = 3500;
+    public static final double ENCODER_COUNT_PER_DEGREE = ARM_MOTOR_COUNTS_PER_REV / 360;
     /**
      * The one and only constructor requires a reference to an OpMode.
      * @param opmode
@@ -113,7 +115,8 @@ public class RobotHardware {
      */
     private void initServos() {
         // Define and initialize ALL installed servos.
-        DroneLaunch = myOpMode.hardwareMap.get(Servo.class, "DroneLaunch");
+        droneLaunch = myOpMode.hardwareMap.get(Servo.class, "DroneLaunch");
+        intakeServo = myOpMode.hardwareMap.get(CRServo.class, "IntakeServo");
     }
 
     /**
@@ -126,14 +129,14 @@ public class RobotHardware {
         colorSensor = myOpMode.hardwareMap.get(ColorSensor.class, "colorSensor");
     }
     private void initAnalogInput() {
-        potentiometer = myOpMode.hardwareMap.get(AnalogInput.class, "potentiometer");
+        armPotentiometer = myOpMode.hardwareMap.get(AnalogInput.class, "potentiometer");
     }
 
     private void initArmMotors() {
         rightArm = myOpMode.hardwareMap.get(DcMotor.class, "RArm");
         leftArm = myOpMode.hardwareMap.get(DcMotor.class, "LArm");
         rightArm.setDirection(DcMotor.Direction.FORWARD);
-        leftArm.setDirection(DcMotor.Direction.REVERSE);
+        leftArm.setDirection(DcMotor.Direction.FORWARD);
     }
 
 
@@ -263,35 +266,41 @@ public class RobotHardware {
      * @param power driving power (-1.0 to 1.0)
      */
     public void setArmPower(double power) {
-        armMotor.setPower(power);
+        leftArm.setPower(power);
+        rightArm.setPower(power);
+        //This telemetry reports when just manually moving arm...why?
+        //myOpMode.telemetry.addData("Potentiometer Voltage", this.getPotentiometerVoltage());
+        //myOpMode.telemetry.update();
     }
 
-    /**
-     * Send the two hand-servos to opposing (mirrored) positions, based on the passed offset.
-     *
-     * @param offset
-     */
-    public void setHandPositions(double offset) {
-        offset = Range.clip(offset, -0.5, 0.5);
-        leftHand.setPosition(MID_SERVO + offset);
-        rightHand.setPosition(MID_SERVO - offset);
+    public void setIntakeServoIntake() {
+        intakeServo.setDirection(DcMotorSimple.Direction.FORWARD);
+        intakeServo.setPower(1);
     }
+    public void setIntakeServoOutake() {
+        intakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        intakeServo.setPower(1);
+    }
+    public void setIntakeServoStop() {
+        intakeServo.setPower(0);
+    }
+
 
     /**
      * Move XYZ servo so that drone is released.
      */
     public void releaseDrone() {
-        DroneLaunch.setPosition(0.5);
+        droneLaunch.setPosition(0.5);
     }
     public void resetDrone() {
-        DroneLaunch.setPosition(0.9);
+        droneLaunch.setPosition(0.9);
     }
 
     public double getPotentiometerVoltage(){
-        return potentiometer.getVoltage();
+        return armPotentiometer.getVoltage();
     }
-    public double getMaxPotentiometerVoltage(){
-        return potentiometer.getMaxVoltage();
+    public double getMaxPotentiometerVoltage() {
+        return armPotentiometer.getMaxVoltage();
     }
     public RGBAColors getSensorColors() {
         int red = colorSensor.red();
@@ -338,33 +347,122 @@ public class RobotHardware {
         }
         setPowerAllWheels(0);
     }
+    /**
+     * Move arm up or down until it gets to potentiometer's targetAngle.
+     * @param targetAngle
+     */
+    public void setArmPositionUsingAngle(double targetAngle) {
+        double currentAngle = getPotentiometerAngle();
+        setRunModeForAllArms(DcMotor.RunMode.RUN_USING_ENCODER);
 
-    public void turnToSpike(int propPositionNumber, SpikeColor color) {
-        myOpMode.telemetry.addData("Op Mode",propPositionNumber);
-        myOpMode.telemetry.update();
+        //Ex. If currentAngle is 100 degrees, and targetAngle is 200 degrees,
+        //    we want to move arm up.
+        //    If currentAngle is 200 degrees, and targetAngle is 100 degrees,
+        //    we want to move arm down.
+        if (currentAngle < targetAngle) {
+            myOpMode.telemetry.addData("Initial Angle", currentAngle);
+            myOpMode.telemetry.addData("Initial Voltage", getPotentiometerVoltage());
+            Telemetry.Item currentTelemetryItem = setupArmPositionTelemetry("Target Angle", targetAngle, "Current Angle", currentAngle);
+            setArmPower(ARM_UP_POWER);
 
-        int pixelTurnDistance;
-        double turnSpeed = .15;
+            while (myOpMode.opModeIsActive() && getPotentiometerAngle() < targetAngle) {
+                currentTelemetryItem.setValue(getPotentiometerAngle());
+                myOpMode.telemetry.update();
+            }
 
-        if ((color == SpikeColor.RED && propPositionNumber == 1) || (color == SpikeColor.BLUE && propPositionNumber == 3)) {
-            pixelTurnDistance = 16;
+            setArmPower(0); //Whoa
+            myOpMode.telemetry.addData("Ending Angle", getPotentiometerAngle());
+            myOpMode.telemetry.addData("Ending Voltage", getPotentiometerVoltage());
+            myOpMode.telemetry.update();
         }
-        else  {
-            pixelTurnDistance = 14;
-        }
+        else if (currentAngle > targetAngle) {
+            myOpMode.telemetry.addData("Initial Angle", currentAngle);
+            myOpMode.telemetry.addData("Initial Voltage", getPotentiometerVoltage());
+            Telemetry.Item currentTelemetryItem = setupArmPositionTelemetry("Target Angle", targetAngle, "Current Angle", currentAngle);
+            setArmPower(ARM_DOWN_POWER);
 
-        if (propPositionNumber == 2) {
-            autoDriveRobot(20,20); //Back away from spike
-        } else if (propPositionNumber == 1) {
-            autoDriveRobot(pixelTurnDistance,pixelTurnDistance * -1, turnSpeed); //place pixel on spike 1
-            autoDriveRobot(3, 3); //back away from spike
-        }
-        //3
-        else {
-            autoDriveRobot(pixelTurnDistance * -1, pixelTurnDistance, turnSpeed); //place pixel on spike 3
-            autoDriveRobot(5,5); // back away from spike
+            while (myOpMode.opModeIsActive() && getPotentiometerAngle() > targetAngle) {
+                currentTelemetryItem.setValue(getPotentiometerAngle());
+                myOpMode.telemetry.update();
+            }
+
+            setArmPower(0); //Whoa
+            myOpMode.telemetry.addData("Ending Angle", getPotentiometerAngle());
+            myOpMode.telemetry.addData("Ending Voltage", getPotentiometerVoltage());
+            myOpMode.telemetry.update();
         }
     }
+
+    /**
+     * Return calculated angle corresponding to potentiometer's current voltage.
+     * Example: If the potentiometer's maximum voltage is 3.3,
+     *          and it's maximum angle is 270 degrees,
+     *          and the current voltage is 1.65
+     *          then the current angle is 1.65 * 270 / 3.3 = 135 degrees.
+     * @return angle
+     */
+    public double getPotentiometerAngle() {
+        return armPotentiometer.getVoltage() * MAX_POTENTIOMETER_ANGLE / this.getMaxPotentiometerVoltage();
+    }
+
+    public void setRunModeForAllArms(DcMotor.RunMode runMode) {
+        leftArm.setMode(runMode);
+        rightArm.setMode(runMode);
+    }
+
+    /**
+     * Set up telemetry to output this:
+     *    <targetCaption> : <targetValue>
+     *    <currentCaption> : <currentValue>
+     * The Telemetry.Item for the currentValue is returned so the caller can keep updating it
+     * using setValue().
+     *
+     * @param targetCaption
+     * @param targetValue
+     * @param currentCaption
+     * @param currentValue
+     * @return currentItem
+     */
+    private Telemetry.Item setupArmPositionTelemetry(String targetCaption, double targetValue, String currentCaption, double currentValue) {
+        Telemetry telemetry = myOpMode.telemetry;
+        telemetry.addData(targetCaption, targetValue);
+        Telemetry.Item currentItem = telemetry.addData(currentCaption, currentValue);
+        telemetry.update(); //Allow driver station to be cleared before display.
+        telemetry.setAutoClear(false); //Henceforth updates should not clear display.
+
+        return currentItem;
+    }
+    public void adjustArmAngleUsingEncoder(double angle) {
+        int encoderCountAdjustment = (int) (ENCODER_COUNT_PER_DEGREE * angle);
+
+        //The arms *should* be parallel, but calculate new targets for both arms anyway.
+        int leftArmTargetEncoderCount = leftArm.getCurrentPosition() + encoderCountAdjustment;
+        int rightArmTargetEncoderCount = rightArm.getCurrentPosition() + encoderCountAdjustment;
+
+        leftArm.setTargetPosition(leftArmTargetEncoderCount);
+        rightArm.setTargetPosition(rightArmTargetEncoderCount);
+        setRunModeForAllArms(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //Set up telemetry
+        myOpMode.telemetry.setAutoClear(false);
+        Telemetry.Item leftArmItem = myOpMode.telemetry.addData("Left Arm", leftArm.getCurrentPosition());
+        Telemetry.Item rightArmItem = myOpMode.telemetry.addData("Right Arm", rightArm.getCurrentPosition());
+        myOpMode.telemetry.update();
+
+        setArmPower(ARM_DOWN_POWER); //Using ARM_DOWN_POWER for now.
+
+        // Update telemetry for as long as the wheel motors isBusy().
+        while (leftArm.isBusy() && rightArm.isBusy()) {
+            leftArmItem.setValue(leftArm.getCurrentPosition());
+            rightArmItem.setValue(rightArm.getCurrentPosition());
+            myOpMode.telemetry.update();
+        }
+
+        myOpMode.telemetry.setAutoClear(true);
+    }
+
+    public void manuallyMoveArm(double power) {
+        setRunModeForAllArms(DcMotor.RunMode.RUN_USING_ENCODER);
+        setArmPower(power);
+    }
 }
-
-
