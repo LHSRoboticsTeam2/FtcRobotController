@@ -9,8 +9,9 @@ public class Teleop  extends LinearOpMode {
     @Override
     public void runOpMode() {
         RobotHardware robot = new RobotHardware(this);
+        RobotWheels wheels = new RobotWheels(this,robot);
         robot.init();
-        robot.resetDrone();
+        wheels.init();
 
         // Wait for the DS start button to be touched.
         telemetry.addData(">", "Touch Play to start OpMode");
@@ -18,39 +19,35 @@ public class Teleop  extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            robot.manuallyDriveRobot(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            wheels.manuallyDriveRobot(gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
 
-            if (gamepad1.a) {
-                robot.releaseDrone();
+            if (gamepad1.left_bumper) {
+                robot.openGrabber();
             }
-            else if (gamepad1.b) {
-                robot.resetDrone();
-            }
-
-            if (gamepad1.x) {
-                telemetry.addData("X Pressed", "");
-                robot.manuallyMoveArm(0.3);
-                //robot.adjustArmAngleUsingEncoder(-175);
-            }
-            else if (gamepad1.y) {
-                telemetry.addData("Y Pressed", "");
-                robot.manuallyMoveArm(-0.3);
-            }
-            else {
-                //telemetry.addData("Neither X or Y Pressed", "");
-                robot.manuallyMoveArm(0);
+            else if (gamepad1.right_bumper) {
+                robot.closeGrabber();
             }
 
-            if (gamepad1.right_bumper) {
-                robot.setIntakeServoIntake();
+            while (gamepad1.x) {
+               robot.moveSlideUp();
             }
-            else if (gamepad1.left_bumper) {
-                robot.setIntakeServoOutake();
+            while (gamepad1.y) {
+                robot.moveSlideDown();
             }
-            else {
-                robot.setIntakeServoStop();
+            if (!gamepad1.x && !gamepad1.y) {
+                robot.stopSlide();
             }
 
+            robot.extendHorizontalLift(gamepad1.right_trigger);
+
+            while (gamepad1.dpad_down)
+            {
+                robot.grabberArmForward();
+            }
+            while (gamepad1.dpad_up)
+            {
+                robot.grabberArmBackward();
+            }
         }
     }
 }
