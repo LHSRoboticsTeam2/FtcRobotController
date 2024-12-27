@@ -15,9 +15,20 @@ public class AutoBlue extends LinearOpMode {
 
         waitForStart();
         // robot starts next to the wall, then moves forward, turns, then moves forward to the net zone
-        robotWheels.autoDriveRobot(11, 11);
-        robotWheels.autoDriveRobot(10, -10);
-        robotWheels.autoDriveRobot(60, 60);
+
+        if (opModeIsActive()) {
+            robotWheels.autoDriveRobot(70, 70);
+            //robot.moveSlideUp();
+            //robot.moveSlideDown();
+
+           // robot.grabberArmForward();
+            //robot.openGrabber();
+            //robot.moveSlideDown();
+            //robot.grabberArmBackward();
+        }
+    sleep(7000);
+
+
     }
 }
 

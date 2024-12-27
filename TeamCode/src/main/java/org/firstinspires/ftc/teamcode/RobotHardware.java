@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 /**
@@ -53,8 +54,8 @@ public class RobotHardware {
     private final LinearOpMode myOpMode;   // gain access to methods in the calling OpMode.
 
     // Define all the HardwareDevices (Motors, Servos, etc.). Make them private so they can't be accessed externally.
-    private DcMotor leftArm;
-    private DcMotor rightArm;
+    //private DcMotor leftArm;
+    //private DcMotor rightArm;
     private WebcamName webCam;
     private Servo horizontalLift;
     private Servo grabberArmRight;
@@ -62,7 +63,7 @@ public class RobotHardware {
     private Servo grabber;
     private DcMotor slideLeft;
     private DcMotor slideRight;
-    private ColorSensor colorSensor;
+    private DcMotor intakeArm;
 
     // Hardware device constants.  Make them public so they can be used by the calling OpMode, if needed.
     static final double COUNTS_PER_MOTOR_REV = 560;     // Assumes 20:1 gear reduction
@@ -72,7 +73,7 @@ public class RobotHardware {
     static final double DEFAULT_MOTOR_SPEED = .4;
     static final double  HEADING_THRESHOLD = 1.0 ; // How close must the heading get to the target before moving to next step.
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
-    static final double MID_SERVO       =  0.5 ;
+    static final double MID_SERVO       =  0.40 ;
     static final double HAND_SPEED      =  0.02 ;  // sets rate to move servo
     static final double ARM_UP_POWER    =  0.45 ;
     static final double ARM_DOWN_POWER  = -0.45 ;
@@ -93,6 +94,8 @@ public class RobotHardware {
     static final double ARM_PARKED_VOLTAGE = 0;
     static final double ARM_PIXEL_PICKUP_VOLTAGE = 3;
     static final double ARM_BACKDROP_VOLTAGE = 1.4;
+
+    static final int SLIDER_MOVEMENT_OFFSET = 100;/*6000*/;
 
     /**
      * The one and only constructor requires a reference to a LinearOpMode.
@@ -126,16 +129,16 @@ public class RobotHardware {
     private void initServos() {
         // Define and initialize ALL installed servos.
         horizontalLift = myOpMode.hardwareMap.get(Servo.class, "horizontalLift");
-        grabberArmRight = myOpMode.hardwareMap.get(Servo.class, "intakePlaneRight");
-        grabberArmLeft = myOpMode.hardwareMap.get(Servo.class, "intakePlaneLeft");
+        //grabberArmRight = myOpMode.hardwareMap.get(Servo.class, "intakePlaneRight");
+       // grabberArmLeft = myOpMode.hardwareMap.get(Servo.class, "intakePlaneLeft");
         grabber = myOpMode.hardwareMap.get(Servo.class, "grabber");
 
         horizontalLift.setPosition(MID_SERVO);
 
-        grabberArmLeft.setPosition(MID_SERVO);
-        grabberArmRight.setPosition(MID_SERVO);
-        grabberArmLeft.setDirection(Servo.Direction.FORWARD);
-        grabberArmRight.setDirection(Servo.Direction.REVERSE);
+        //grabberArmLeft.setPosition(MID_SERVO);
+        //grabberArmRight.setPosition(MID_SERVO);
+        //grabberArmLeft.setDirection(Servo.Direction.FORWARD);
+        //grabberArmRight.setDirection(Servo.Direction.REVERSE);
         grabber.setPosition(MID_SERVO);
     }
 
@@ -148,13 +151,15 @@ public class RobotHardware {
 
         slideRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeArm = myOpMode.hardwareMap.get(DcMotor.class, "intakeArm");
+        intakeArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     /**
      * Initialize distance sensor(s).
      */
     private void initColorSensor() {
-        colorSensor = myOpMode.hardwareMap.get(ColorSensor.class, "colorSensor");
+        //colorSensor = myOpMode.hardwareMap.get(ColorSensor.class, "colorSensor");
     }
 
     /**
@@ -203,14 +208,66 @@ public class RobotHardware {
     }
 
     public void moveSlideUp() {
+//        myOpMode.telemetry.setAutoClear(false);
+//        myOpMode.telemetry.addData("Slide Up", "Current Slide Positions");
+//        Telemetry.Item leftSlideItem = myOpMode.telemetry.addData("Left Slide", slideLeft.getCurrentPosition());
+//        Telemetry.Item rightSlideItem = myOpMode.telemetry.addData("Right Slide", slideRight.getCurrentPosition());
+//        myOpMode.telemetry.update();
+//
+//        int rightTargetPosition = slideRight.getCurrentPosition() + SLIDER_MOVEMENT_OFFSET;
+//        int leftTargetPosition = slideLeft.getCurrentPosition() + SLIDER_MOVEMENT_OFFSET;
+//
+//        slideRight.setTargetPosition(rightTargetPosition);
+//        slideLeft.setTargetPosition(leftTargetPosition);
+//
+//        slideRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        slideLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//
+    slideRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    slideLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slideRight.setPower(1);
         slideLeft.setPower(1);
+//
+//        while (slideRight.isBusy() && slideLeft.isBusy()) {
+//            leftSlideItem.setValue(slideLeft.getCurrentPosition());
+//            rightSlideItem.setValue(slideRight.getCurrentPosition());
+//            myOpMode.telemetry.update();
+//        }
+//
+//        this.stopSlide();
+//        myOpMode.telemetry.setAutoClear(true);
     }
 
 
     public void moveSlideDown() {
+//        myOpMode.telemetry.setAutoClear(false);
+//        myOpMode.telemetry.addData("Slide Down", "Current Slide Positions");
+//        Telemetry.Item leftSlideItem = myOpMode.telemetry.addData("Left Slide", slideLeft.getCurrentPosition());
+//        Telemetry.Item rightSlideItem = myOpMode.telemetry.addData("Right Slide", slideRight.getCurrentPosition());
+//        myOpMode.telemetry.update();
+//
+//        int rightTargetPosition = slideRight.getCurrentPosition() - SLIDER_MOVEMENT_OFFSET;
+//        int leftTargetPosition = slideLeft.getCurrentPosition() - SLIDER_MOVEMENT_OFFSET;
+//
+//        slideRight.setTargetPosition(rightTargetPosition);
+//        slideLeft.setTargetPosition(leftTargetPosition);
+//
+//        slideRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        slideLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//
+    slideRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    slideLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slideRight.setPower(-1);
         slideLeft.setPower(-1);
+//
+//        while (slideRight.isBusy() && slideLeft.isBusy()) {
+//            leftSlideItem.setValue(slideLeft.getCurrentPosition());
+//            rightSlideItem.setValue(slideRight.getCurrentPosition());
+//            myOpMode.telemetry.update();
+//        }
+//
+//        this.stopSlide();
+//        myOpMode.telemetry.setAutoClear(true);
     }
 
     public void stopSlide() {
@@ -219,12 +276,25 @@ public class RobotHardware {
     }
 
     public void grabberArmForward() {
-        grabberArmRight.setPosition(1);
-        grabberArmLeft.setPosition(1);
+        //double pos = .65;
+        //intakeArm.getCurrentPosition();
+        //grabberArmRight.setPosition(pos);
+        //grabberArmLeft.setPosition(pos);
+        intakeArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intakeArm.setPower(1);
+
     }
 
     public void grabberArmBackward() {
-        grabberArmRight.setPosition(0);
-        grabberArmLeft.setPosition(0);
+        //double pos = .8;
+        //grabberArmRight.setPosition(pos);
+        //grabberArmLeft.setPosition(pos);
+        intakeArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intakeArm.setPower(-1);
+
+    }
+
+    public void grabberArmStop() {
+        intakeArm.setPower(0);
     }
 }

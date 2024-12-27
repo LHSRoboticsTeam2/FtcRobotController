@@ -40,13 +40,16 @@ public class Teleop  extends LinearOpMode {
 
             robot.extendHorizontalLift(gamepad1.right_trigger);
 
-            while (gamepad1.dpad_down)
+            if (gamepad1.dpad_down)
             {
                 robot.grabberArmForward();
             }
-            while (gamepad1.dpad_up)
+            else if (gamepad1.dpad_up)
             {
                 robot.grabberArmBackward();
+            }
+            else {
+                robot.grabberArmStop();
             }
         }
     }
